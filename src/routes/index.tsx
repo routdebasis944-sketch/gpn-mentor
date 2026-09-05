@@ -18,7 +18,7 @@ function getYouTubeId(url: string): string | null {
     if (host === "youtube.com" || host === "m.youtube.com") {
       if (u.pathname === "/watch") return u.searchParams.get("v");
       const m = u.pathname.match(/^\/(shorts|embed|live)\/([^/?#]+)/);
-      if (m) return m[2];
+      if (m) return m[2] ?? null;
     }
   } catch {
     // not a URL
