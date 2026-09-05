@@ -71,6 +71,44 @@ function GpnChat() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
+  // Speak the Hindi welcome greeting via Text-to-Speech when the app loads.
+  // Browsers may block autoplay with sound; if so, play on the first tap/click.
+  useEffect(() => {
+    let cancelled = false;
+    let cleanupGesture: (() => void) | undefined;
+
+    (async () => {
+      try {
+        const res = await fetch("/api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: GPN_WELCOME_HI }),
+        });
+        if (!res.ok || cancelled) return;
+        const blob = await res.blob();
+        if (cancelled) return;
+        const audio = new Audio(URL.createObjectURL(blob));
+        try {
+          await audio.play();
+        } catch {
+          // Autoplay blocked — wait for the first user gesture.
+          const playOnGesture = () => {
+            audio.play().catch(() => {});
+          };
+          window.addEventListener("pointerdown", playOnGesture, { once: true });
+          cleanupGesture = () => window.removeEventListener("pointerdown", playOnGesture);
+        }
+      } catch {
+        // TTS is a nice-to-have; ignore failures silently.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      cleanupGesture?.();
+    };
+  }, []);
+
   const sendPrompt = useCallback(async (promptText: string) => {
     const text = promptText.trim();
     if (!text || isStreaming) return;
