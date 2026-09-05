@@ -4,7 +4,27 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Send, GraduationCap, PlayCircle, Briefcase, BookOpen } from "lucide-react";
 import gpnLogo from "@/assets/gpn-logo.png";
-import { GPN_SYSTEM_PROMPT, GPN_WELCOME } from "@/lib/gpn-prompt";
+import { GPN_SYSTEM_PROMPT, GPN_WELCOME, GPN_WELCOME_HI } from "@/lib/gpn-prompt";
+
+// Extracts a YouTube video ID from watch / youtu.be / shorts / embed URLs.
+function getYouTubeId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, "");
+    if (host === "youtu.be") {
+      const id = u.pathname.slice(1).split("/")[0];
+      return id || null;
+    }
+    if (host === "youtube.com" || host === "m.youtube.com") {
+      if (u.pathname === "/watch") return u.searchParams.get("v");
+      const m = u.pathname.match(/^\/(shorts|embed|live)\/([^/?#]+)/);
+      if (m) return m[2];
+    }
+  } catch {
+    // not a URL
+  }
+  return null;
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
