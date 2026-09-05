@@ -61,16 +61,15 @@ function GpnChat() {
     const userMsg: Message = { role: "user", content: text };
     const assistantMsg: Message = { role: "assistant", content: "", streaming: true };
 
-    // Snapshot the conversation to send upstream (persona injected server-side
-    // via the API route would be cleaner, but we keep the system prompt on the
-    // client request so the route stays generic). Actually we prepend it here.
-    const history: Message[] = [
-      { role: "assistant", content: GPN_SYSTEM_PROMPT, streaming: false } as Message,
-      ...messages,
-      userMsg,
-    ];
-
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
+
+    // Build the payload sent upstream: persona as a system message, then the
+    // full prior conversation, then the new user turn.
+    const payloadMessages = [
+      { role: "system", content: GPN_SYSTEM_PROMPT },
+      ...messages.map((m) => ({ role: m.role, content: m.content })),
+      { role: "user", content: text },
+    ];
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -79,9 +78,7 @@ function GpnChat() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: history.map((m) => ({ role: m.role, content: m.content })),
-        }),
+        body: JSON.stringify({ messages: payloadMessages }),
         signal: controller.signal,
       });
 
