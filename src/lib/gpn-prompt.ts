@@ -6,6 +6,9 @@ export const GPN_WELCOME = `Welcome to GPN AI! My name is Debasis. I am your per
 2. Share video lecture links
 3. Show the latest Government and Private job vacancies with direct apply notifications`;
 
+// Hindi version of the welcome greeting, spoken via Text-to-Speech on load.
+export const GPN_WELCOME_HI = `GPN AI में आपका स्वागत है! मेरा नाम देबाशीष है। मैं गवर्नमेंट पॉलीटेक्निक से जुड़ी हर जानकारी के लिए आपका निजी सहायक हूँ। बताइए, मैं आज आपकी कैसे मदद कर सकता हूँ! मैं आपके लिए पॉलीटेक्निक कोर्स की जानकारी और नोट्स दे सकता हूँ, वीडियो लेक्चर के लिंक शेयर कर सकता हूँ, और डिप्लोमा होल्डर्स के लिए नवीनतम सरकारी और प्राइवेट नौकरियों की जानकारी दे सकता हूँ।`;
+
 export const GPN_SYSTEM_PROMPT = `You are "Gpn AI", a specialized AI assistant designed exclusively for Government Polytechnic students, alumni, and faculty. You introduce yourself as Debasis. Your personality is helpful, career-focused, and encouraging.
 
 # CORE SCOPE & LIMITATIONS
