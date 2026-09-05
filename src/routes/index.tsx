@@ -4,7 +4,27 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Send, GraduationCap, PlayCircle, Briefcase, BookOpen } from "lucide-react";
 import gpnLogo from "@/assets/gpn-logo.png";
-import { GPN_SYSTEM_PROMPT, GPN_WELCOME } from "@/lib/gpn-prompt";
+import { GPN_SYSTEM_PROMPT, GPN_WELCOME, GPN_WELCOME_HI } from "@/lib/gpn-prompt";
+
+// Extracts a YouTube video ID from watch / youtu.be / shorts / embed URLs.
+function getYouTubeId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, "");
+    if (host === "youtu.be") {
+      const id = u.pathname.slice(1).split("/")[0];
+      return id || null;
+    }
+    if (host === "youtube.com" || host === "m.youtube.com") {
+      if (u.pathname === "/watch") return u.searchParams.get("v");
+      const m = u.pathname.match(/^\/(shorts|embed|live)\/([^/?#]+)/);
+      if (m) return m[2] ?? null;
+    }
+  } catch {
+    // not a URL
+  }
+  return null;
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -50,6 +70,44 @@ function GpnChat() {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  // Speak the Hindi welcome greeting via Text-to-Speech when the app loads.
+  // Browsers may block autoplay with sound; if so, play on the first tap/click.
+  useEffect(() => {
+    let cancelled = false;
+    let cleanupGesture: (() => void) | undefined;
+
+    (async () => {
+      try {
+        const res = await fetch("/api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: GPN_WELCOME_HI }),
+        });
+        if (!res.ok || cancelled) return;
+        const blob = await res.blob();
+        if (cancelled) return;
+        const audio = new Audio(URL.createObjectURL(blob));
+        try {
+          await audio.play();
+        } catch {
+          // Autoplay blocked — wait for the first user gesture.
+          const playOnGesture = () => {
+            audio.play().catch(() => {});
+          };
+          window.addEventListener("pointerdown", playOnGesture, { once: true });
+          cleanupGesture = () => window.removeEventListener("pointerdown", playOnGesture);
+        }
+      } catch {
+        // TTS is a nice-to-have; ignore failures silently.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      cleanupGesture?.();
+    };
+  }, []);
 
   const sendPrompt = useCallback(async (promptText: string) => {
     const text = promptText.trim();
@@ -298,9 +356,39 @@ function MessageBubble({ message }: { message: Message }) {
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                  a: ({ ...props }) => (
-                    <a {...props} target="_blank" rel="noopener noreferrer" />
-                  ),
+                  a: ({ href, children, ...props }) => {
+                    const videoId = href ? getYouTubeId(href) : null;
+                    if (videoId) {
+                      return (
+                        <span className="my-3 block overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+                          <span className="relative block aspect-video w-full">
+                            <iframe
+                              src={`https://www.youtube-nocookie.com/embed/${videoId}`}
+                              title={typeof children === "string" ? children : "YouTube video lecture"}
+                              className="absolute inset-0 h-full w-full"
+                              loading="lazy"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                              allowFullScreen
+                            />
+                          </span>
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
+                            {...props}
+                          >
+                            {children}
+                          </a>
+                        </span>
+                      );
+                    }
+                    return (
+                      <a href={href} {...props} target="_blank" rel="noopener noreferrer">
+                        {children}
+                      </a>
+                    );
+                  },
                 }}
               >
                 {message.content}
