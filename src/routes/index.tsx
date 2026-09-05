@@ -356,9 +356,39 @@ function MessageBubble({ message }: { message: Message }) {
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                  a: ({ ...props }) => (
-                    <a {...props} target="_blank" rel="noopener noreferrer" />
-                  ),
+                  a: ({ href, children, ...props }) => {
+                    const videoId = href ? getYouTubeId(href) : null;
+                    if (videoId) {
+                      return (
+                        <span className="my-3 block overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+                          <span className="relative block aspect-video w-full">
+                            <iframe
+                              src={`https://www.youtube-nocookie.com/embed/${videoId}`}
+                              title={typeof children === "string" ? children : "YouTube video lecture"}
+                              className="absolute inset-0 h-full w-full"
+                              loading="lazy"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                              allowFullScreen
+                            />
+                          </span>
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
+                            {...props}
+                          >
+                            {children}
+                          </a>
+                        </span>
+                      );
+                    }
+                    return (
+                      <a href={href} {...props} target="_blank" rel="noopener noreferrer">
+                        {children}
+                      </a>
+                    );
+                  },
                 }}
               >
                 {message.content}
