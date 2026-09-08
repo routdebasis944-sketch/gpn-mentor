@@ -2,7 +2,18 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Send, GraduationCap, PlayCircle, Briefcase, BookOpen } from "lucide-react";
+import {
+  Send,
+  GraduationCap,
+  PlayCircle,
+  Briefcase,
+  BookOpen,
+  Paperclip,
+  Image as ImageIcon,
+  Camera,
+  FileText,
+  X,
+} from "lucide-react";
 import debasisAvatar from "@/assets/debasis-avatar.png";
 import { GPN_SYSTEM_PROMPT, GPN_WELCOME, GPN_GREETING_HI } from "@/lib/gpn-prompt";
 
@@ -48,7 +59,36 @@ export const Route = createFileRoute("/")({
   component: GpnChat,
 });
 
-type Message = { role: "user" | "assistant"; content: string; streaming?: boolean };
+type Attachment = {
+  id: string;
+  name: string;
+  mime: string;
+  dataUrl: string;
+  isImage: boolean;
+};
+
+type Message = {
+  role: "user" | "assistant";
+  content: string;
+  streaming?: boolean;
+  attachments?: Attachment[];
+};
+
+function readFileAsAttachment(file: File): Promise<Attachment> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () =>
+      resolve({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: file.name || "attachment",
+        mime: file.type || "application/octet-stream",
+        dataUrl: String(reader.result),
+        isImage: (file.type || "").startsWith("image/"),
+      });
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
 
 const SUGGESTIONS = [
   { icon: BookOpen, label: "Course details & notes", prompt: "Give me the syllabus and key subjects for the Computer Science diploma, 3rd semester." },
@@ -62,8 +102,13 @@ function GpnChat() {
   ]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const filesRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll to the newest message.
   useEffect(() => {
@@ -123,25 +168,49 @@ function GpnChat() {
     };
   }, []);
 
-  const sendPrompt = useCallback(async (promptText: string) => {
+  const sendPrompt = useCallback(async (promptText: string, files: Attachment[] = []) => {
     const text = promptText.trim();
-    if (!text || isStreaming) return;
+    if ((!text && files.length === 0) || isStreaming) return;
 
     setInput("");
+    setAttachments([]);
     setIsStreaming(true);
 
-    const userMsg: Message = { role: "user", content: text };
+    const userMsg: Message = {
+      role: "user",
+      content: text,
+      ...(files.length ? { attachments: files } : {}),
+    };
     const assistantMsg: Message = { role: "assistant", content: "", streaming: true };
 
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
+
+    const toBlocks = (m: Message) => {
+      if (m.role !== "user" || !m.attachments?.length) return m.content;
+      const blocks: unknown[] = [];
+      if (m.content) blocks.push({ type: "text", text: m.content });
+      for (const a of m.attachments) {
+        if (a.isImage) {
+          blocks.push({ type: "image_url", image_url: { url: a.dataUrl } });
+        } else {
+          blocks.push({
+            type: "file",
+            file: { filename: a.name, file_data: a.dataUrl },
+          });
+        }
+      }
+      if (!m.content) blocks.unshift({ type: "text", text: "Please review this attachment." });
+      return blocks;
+    };
 
     // Build the payload sent upstream: persona as a system message, then the
     // full prior conversation, then the new user turn.
     const payloadMessages = [
       { role: "system", content: GPN_SYSTEM_PROMPT },
-      ...messages.map((m) => ({ role: m.role, content: m.content })),
-      { role: "user", content: text },
+      ...messages.map((m) => ({ role: m.role, content: toBlocks(m) })),
+      { role: "user", content: toBlocks(userMsg) },
     ];
+
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -234,11 +303,19 @@ function GpnChat() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendPrompt(input);
+      sendPrompt(input, attachments);
     }
   };
 
+  const handleFiles = async (list: FileList | null) => {
+    if (!list?.length) return;
+    const picked = Array.from(list).slice(0, 5);
+    const read = await Promise.all(picked.map(readFileAsAttachment));
+    setAttachments((prev) => [...prev, ...read].slice(0, 5));
+  };
+
   const showSuggestions = messages.length === 1;
+  const canSend = (!!input.trim() || attachments.length > 0) && !isStreaming;
 
   return (
     <div className="flex h-dvh flex-col bg-background text-foreground">
@@ -310,20 +387,63 @@ function GpnChat() {
       {/* Input */}
       <div className="border-t border-border bg-card/80 backdrop-blur">
         <div className="mx-auto w-full max-w-3xl px-4 py-3">
+          {attachments.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-2 gpn-fade-in">
+              {attachments.map((a) => (
+                <div
+                  key={a.id}
+                  className="relative flex items-center gap-2 rounded-xl border border-border bg-card p-1.5 pr-7 shadow-sm"
+                >
+                  {a.isImage ? (
+                    <img
+                      src={a.dataUrl}
+                      alt={a.name}
+                      className="h-12 w-12 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-brand-soft text-primary">
+                      <FileText className="h-5 w-5" />
+                    </span>
+                  )}
+                  <span className="max-w-[8rem] truncate text-xs text-muted-foreground">
+                    {a.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setAttachments((prev) => prev.filter((x) => x.id !== a.id))}
+                    aria-label={`Remove ${a.name}`}
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-foreground/70 text-background transition hover:bg-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-end gap-2 rounded-2xl border border-border bg-background p-1.5 focus-within:border-saffron focus-within:ring-2 focus-within:ring-saffron/30 transition-all">
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              disabled={isStreaming}
+              aria-label="Attach a photo or file"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-brand-soft hover:text-primary disabled:opacity-40"
+            >
+              <Paperclip className="h-5 w-5" />
+            </button>
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               rows={1}
               placeholder="Ask about courses, video lectures, or job alerts…"
-              className="max-h-36 min-h-[2.5rem] flex-1 resize-none bg-transparent px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+              className="max-h-36 min-h-[2.5rem] flex-1 resize-none bg-transparent px-1 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground"
               disabled={isStreaming}
             />
             <button
               type="button"
-              onClick={() => sendPrompt(input)}
-              disabled={!input.trim() || isStreaming}
+              onClick={() => sendPrompt(input, attachments)}
+              disabled={!canSend}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Send message"
             >
@@ -336,6 +456,82 @@ function GpnChat() {
           </p>
         </div>
       </div>
+
+      {/* Hidden pickers */}
+      <input
+        ref={galleryRef}
+        type="file"
+        accept="image/*"
+        multiple
+        hidden
+        onChange={(e) => {
+          handleFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+        onChange={(e) => {
+          handleFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={filesRef}
+        type="file"
+        accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx,application/pdf"
+        multiple
+        hidden
+        onChange={(e) => {
+          handleFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
+
+      {/* Attachment drawer */}
+      {drawerOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm gpn-fade-in"
+          onClick={() => setDrawerOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-label="Choose an attachment source"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-t-3xl border border-border bg-card p-5 pb-7 shadow-2xl sm:mb-8 sm:rounded-3xl"
+          >
+            <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-border" />
+            <p className="mb-4 text-center text-sm font-semibold">Share with Debasis</p>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Gallery", icon: ImageIcon, ref: galleryRef },
+                { label: "Camera", icon: Camera, ref: cameraRef },
+                { label: "Files", icon: FileText, ref: filesRef },
+              ].map((opt) => (
+                <button
+                  key={opt.label}
+                  type="button"
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    opt.ref.current?.click();
+                  }}
+                  className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-background p-4 transition-all hover:-translate-y-0.5 hover:border-saffron hover:shadow-md"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-primary">
+                    <opt.icon className="h-6 w-6" />
+                  </span>
+                  <span className="text-xs font-medium">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
@@ -371,7 +567,33 @@ function MessageBubble({ message }: { message: Message }) {
               <span className="gpn-dot h-2 w-2 rounded-full bg-saffron" />
             </div>
           ) : isUser ? (
-            <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+            <div className="space-y-2">
+              {message.attachments?.length ? (
+                <div className="flex flex-col gap-2">
+                  {message.attachments.map((a) =>
+                    a.isImage ? (
+                      <img
+                        key={a.id}
+                        src={a.dataUrl}
+                        alt={a.name}
+                        className="max-h-64 w-full max-w-xs rounded-xl object-cover shadow-sm"
+                      />
+                    ) : (
+                      <span
+                        key={a.id}
+                        className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2"
+                      >
+                        <FileText className="h-4 w-4 shrink-0" />
+                        <span className="truncate text-xs">{a.name}</span>
+                      </span>
+                    ),
+                  )}
+                </div>
+              ) : null}
+              {message.content && (
+                <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+              )}
+            </div>
           ) : (
             <div className="gpn-prose">
               <ReactMarkdown
