@@ -245,13 +245,13 @@ function GpnChat() {
       {/* Header */}
       <header className="gpn-header-gradient text-primary-foreground shadow-lg">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10 ring-1 ring-white/20 backdrop-blur">
+          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 backdrop-blur">
             <img
-              src={gpnLogo}
-              alt="Gpn AI logo"
-              width={40}
-              height={40}
-              className="h-9 w-9 object-contain"
+              src={debasisAvatar}
+              alt="Debasis, the Gpn AI assistant"
+              width={512}
+              height={512}
+              className="h-full w-full object-cover"
             />
           </div>
           <div className="min-w-0 flex-1">
@@ -259,7 +259,7 @@ function GpnChat() {
               Gpn AI
             </h1>
             <p className="truncate text-xs text-white/70">
-              Your Government Polytechnic assistant · Debasis
+              GPN AI Powered by Debasis
             </p>
           </div>
           <span className="hidden items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/90 ring-1 ring-white/20 sm:inline-flex">
@@ -348,8 +348,15 @@ function MessageBubble({ message }: { message: Message }) {
     <div className={`mb-5 flex gpn-fade-in ${isUser ? "justify-end" : "justify-start"}`}>
       <div className="flex max-w-[85%] gap-2.5 sm:max-w-[80%]">
         {!isUser && (
-          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-soft ring-1 ring-border">
-            <img src={gpnLogo} alt="" width={32} height={32} className="h-7 w-7 object-contain" />
+          <div className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-brand-soft ring-1 ring-border">
+            <img
+              src={debasisAvatar}
+              alt="Debasis"
+              width={512}
+              height={512}
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
           </div>
         )}
         <div
