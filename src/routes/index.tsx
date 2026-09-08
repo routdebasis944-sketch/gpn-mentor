@@ -59,7 +59,36 @@ export const Route = createFileRoute("/")({
   component: GpnChat,
 });
 
-type Message = { role: "user" | "assistant"; content: string; streaming?: boolean };
+type Attachment = {
+  id: string;
+  name: string;
+  mime: string;
+  dataUrl: string;
+  isImage: boolean;
+};
+
+type Message = {
+  role: "user" | "assistant";
+  content: string;
+  streaming?: boolean;
+  attachments?: Attachment[];
+};
+
+function readFileAsAttachment(file: File): Promise<Attachment> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () =>
+      resolve({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: file.name || "attachment",
+        mime: file.type || "application/octet-stream",
+        dataUrl: String(reader.result),
+        isImage: (file.type || "").startsWith("image/"),
+      });
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
 
 const SUGGESTIONS = [
   { icon: BookOpen, label: "Course details & notes", prompt: "Give me the syllabus and key subjects for the Computer Science diploma, 3rd semester." },
