@@ -387,20 +387,63 @@ function GpnChat() {
       {/* Input */}
       <div className="border-t border-border bg-card/80 backdrop-blur">
         <div className="mx-auto w-full max-w-3xl px-4 py-3">
+          {attachments.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-2 gpn-fade-in">
+              {attachments.map((a) => (
+                <div
+                  key={a.id}
+                  className="relative flex items-center gap-2 rounded-xl border border-border bg-card p-1.5 pr-7 shadow-sm"
+                >
+                  {a.isImage ? (
+                    <img
+                      src={a.dataUrl}
+                      alt={a.name}
+                      className="h-12 w-12 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-brand-soft text-primary">
+                      <FileText className="h-5 w-5" />
+                    </span>
+                  )}
+                  <span className="max-w-[8rem] truncate text-xs text-muted-foreground">
+                    {a.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setAttachments((prev) => prev.filter((x) => x.id !== a.id))}
+                    aria-label={`Remove ${a.name}`}
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-foreground/70 text-background transition hover:bg-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-end gap-2 rounded-2xl border border-border bg-background p-1.5 focus-within:border-saffron focus-within:ring-2 focus-within:ring-saffron/30 transition-all">
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              disabled={isStreaming}
+              aria-label="Attach a photo or file"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-brand-soft hover:text-primary disabled:opacity-40"
+            >
+              <Paperclip className="h-5 w-5" />
+            </button>
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               rows={1}
               placeholder="Ask about courses, video lectures, or job alerts…"
-              className="max-h-36 min-h-[2.5rem] flex-1 resize-none bg-transparent px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+              className="max-h-36 min-h-[2.5rem] flex-1 resize-none bg-transparent px-1 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground"
               disabled={isStreaming}
             />
             <button
               type="button"
-              onClick={() => sendPrompt(input)}
-              disabled={!input.trim() || isStreaming}
+              onClick={() => sendPrompt(input, attachments)}
+              disabled={!canSend}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Send message"
             >
@@ -413,6 +456,82 @@ function GpnChat() {
           </p>
         </div>
       </div>
+
+      {/* Hidden pickers */}
+      <input
+        ref={galleryRef}
+        type="file"
+        accept="image/*"
+        multiple
+        hidden
+        onChange={(e) => {
+          handleFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+        onChange={(e) => {
+          handleFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={filesRef}
+        type="file"
+        accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx,application/pdf"
+        multiple
+        hidden
+        onChange={(e) => {
+          handleFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
+
+      {/* Attachment drawer */}
+      {drawerOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm gpn-fade-in"
+          onClick={() => setDrawerOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-label="Choose an attachment source"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-t-3xl border border-border bg-card p-5 pb-7 shadow-2xl sm:mb-8 sm:rounded-3xl"
+          >
+            <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-border" />
+            <p className="mb-4 text-center text-sm font-semibold">Share with Debasis</p>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Gallery", icon: ImageIcon, ref: galleryRef },
+                { label: "Camera", icon: Camera, ref: cameraRef },
+                { label: "Files", icon: FileText, ref: filesRef },
+              ].map((opt) => (
+                <button
+                  key={opt.label}
+                  type="button"
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    opt.ref.current?.click();
+                  }}
+                  className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-background p-4 transition-all hover:-translate-y-0.5 hover:border-saffron hover:shadow-md"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-primary">
+                    <opt.icon className="h-6 w-6" />
+                  </span>
+                  <span className="text-xs font-medium">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
