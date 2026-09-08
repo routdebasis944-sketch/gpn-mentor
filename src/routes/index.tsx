@@ -71,41 +71,55 @@ function GpnChat() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
-  // Speak the Hindi welcome greeting via Text-to-Speech when the app loads.
-  // Browsers may block autoplay with sound; if so, play on the first tap/click.
+  // Speak the Hindi greeting (hi-IN) with the browser's Web Speech API on the
+  // user's first interaction — browsers block speech before a user gesture.
   useEffect(() => {
-    let cancelled = false;
-    let cleanupGesture: (() => void) | undefined;
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
-    (async () => {
+    let spoken = false;
+
+    const pickHindiVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      return (
+        voices.find((v) => v.lang === "hi-IN") ??
+        voices.find((v) => v.lang?.toLowerCase().startsWith("hi")) ??
+        null
+      );
+    };
+
+    const speak = () => {
+      if (spoken) return;
+      spoken = true;
       try {
-        const res = await fetch("/api/tts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: GPN_WELCOME_HI }),
-        });
-        if (!res.ok || cancelled) return;
-        const blob = await res.blob();
-        if (cancelled) return;
-        const audio = new Audio(URL.createObjectURL(blob));
-        try {
-          await audio.play();
-        } catch {
-          // Autoplay blocked — wait for the first user gesture.
-          const playOnGesture = () => {
-            audio.play().catch(() => {});
-          };
-          window.addEventListener("pointerdown", playOnGesture, { once: true });
-          cleanupGesture = () => window.removeEventListener("pointerdown", playOnGesture);
-        }
+        const utterance = new SpeechSynthesisUtterance(GPN_GREETING_HI);
+        utterance.lang = "hi-IN";
+        utterance.rate = 0.95;
+        utterance.pitch = 1;
+        const voice = pickHindiVoice();
+        if (voice) utterance.voice = voice;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
       } catch {
-        // TTS is a nice-to-have; ignore failures silently.
+        // Speech is a nice-to-have; ignore failures silently.
       }
-    })();
+      cleanup();
+    };
+
+    const cleanup = () => {
+      window.removeEventListener("pointerdown", speak);
+      window.removeEventListener("keydown", speak);
+      window.removeEventListener("touchstart", speak);
+    };
+
+    // Warm up the voice list (some browsers load it asynchronously).
+    window.speechSynthesis.getVoices();
+    window.addEventListener("pointerdown", speak);
+    window.addEventListener("keydown", speak);
+    window.addEventListener("touchstart", speak);
 
     return () => {
-      cancelled = true;
-      cleanupGesture?.();
+      cleanup();
+      window.speechSynthesis.cancel();
     };
   }, []);
 
