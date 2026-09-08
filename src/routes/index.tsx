@@ -308,9 +308,11 @@ function GpnChat() {
   };
 
   const handleFiles = async (list: FileList | null) => {
+    console.log("[gpn] handleFiles", list?.length);
     if (!list?.length) return;
     const picked = Array.from(list).slice(0, 5);
     const read = await Promise.all(picked.map(readFileAsAttachment));
+    console.log("[gpn] read", read.length);
     setAttachments((prev) => [...prev, ...read].slice(0, 5));
   };
 
