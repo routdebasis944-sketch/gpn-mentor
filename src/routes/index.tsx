@@ -102,8 +102,13 @@ function GpnChat() {
   ]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const filesRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll to the newest message.
   useEffect(() => {
