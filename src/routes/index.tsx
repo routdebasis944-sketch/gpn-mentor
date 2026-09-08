@@ -3,8 +3,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Send, GraduationCap, PlayCircle, Briefcase, BookOpen } from "lucide-react";
-import gpnLogo from "@/assets/gpn-logo.png";
-import { GPN_SYSTEM_PROMPT, GPN_WELCOME, GPN_WELCOME_HI } from "@/lib/gpn-prompt";
+import debasisAvatar from "@/assets/debasis-avatar.png";
+import { GPN_SYSTEM_PROMPT, GPN_WELCOME, GPN_GREETING_HI } from "@/lib/gpn-prompt";
 
 // Extracts a YouTube video ID from watch / youtu.be / shorts / embed URLs.
 function getYouTubeId(url: string): string | null {
@@ -71,41 +71,55 @@ function GpnChat() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
-  // Speak the Hindi welcome greeting via Text-to-Speech when the app loads.
-  // Browsers may block autoplay with sound; if so, play on the first tap/click.
+  // Speak the Hindi greeting (hi-IN) with the browser's Web Speech API on the
+  // user's first interaction — browsers block speech before a user gesture.
   useEffect(() => {
-    let cancelled = false;
-    let cleanupGesture: (() => void) | undefined;
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
-    (async () => {
+    let spoken = false;
+
+    const pickHindiVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      return (
+        voices.find((v) => v.lang === "hi-IN") ??
+        voices.find((v) => v.lang?.toLowerCase().startsWith("hi")) ??
+        null
+      );
+    };
+
+    const speak = () => {
+      if (spoken) return;
+      spoken = true;
       try {
-        const res = await fetch("/api/tts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: GPN_WELCOME_HI }),
-        });
-        if (!res.ok || cancelled) return;
-        const blob = await res.blob();
-        if (cancelled) return;
-        const audio = new Audio(URL.createObjectURL(blob));
-        try {
-          await audio.play();
-        } catch {
-          // Autoplay blocked — wait for the first user gesture.
-          const playOnGesture = () => {
-            audio.play().catch(() => {});
-          };
-          window.addEventListener("pointerdown", playOnGesture, { once: true });
-          cleanupGesture = () => window.removeEventListener("pointerdown", playOnGesture);
-        }
+        const utterance = new SpeechSynthesisUtterance(GPN_GREETING_HI);
+        utterance.lang = "hi-IN";
+        utterance.rate = 0.95;
+        utterance.pitch = 1;
+        const voice = pickHindiVoice();
+        if (voice) utterance.voice = voice;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
       } catch {
-        // TTS is a nice-to-have; ignore failures silently.
+        // Speech is a nice-to-have; ignore failures silently.
       }
-    })();
+      cleanup();
+    };
+
+    const cleanup = () => {
+      window.removeEventListener("pointerdown", speak);
+      window.removeEventListener("keydown", speak);
+      window.removeEventListener("touchstart", speak);
+    };
+
+    // Warm up the voice list (some browsers load it asynchronously).
+    window.speechSynthesis.getVoices();
+    window.addEventListener("pointerdown", speak);
+    window.addEventListener("keydown", speak);
+    window.addEventListener("touchstart", speak);
 
     return () => {
-      cancelled = true;
-      cleanupGesture?.();
+      cleanup();
+      window.speechSynthesis.cancel();
     };
   }, []);
 
@@ -231,13 +245,13 @@ function GpnChat() {
       {/* Header */}
       <header className="gpn-header-gradient text-primary-foreground shadow-lg">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10 ring-1 ring-white/20 backdrop-blur">
+          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/30 backdrop-blur">
             <img
-              src={gpnLogo}
-              alt="Gpn AI logo"
-              width={40}
-              height={40}
-              className="h-9 w-9 object-contain"
+              src={debasisAvatar}
+              alt="Debasis, the Gpn AI assistant"
+              width={512}
+              height={512}
+              className="h-full w-full object-cover"
             />
           </div>
           <div className="min-w-0 flex-1">
@@ -245,7 +259,7 @@ function GpnChat() {
               Gpn AI
             </h1>
             <p className="truncate text-xs text-white/70">
-              Your Government Polytechnic assistant · Debasis
+              GPN AI Powered by Debasis
             </p>
           </div>
           <span className="hidden items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/90 ring-1 ring-white/20 sm:inline-flex">
@@ -334,8 +348,15 @@ function MessageBubble({ message }: { message: Message }) {
     <div className={`mb-5 flex gpn-fade-in ${isUser ? "justify-end" : "justify-start"}`}>
       <div className="flex max-w-[85%] gap-2.5 sm:max-w-[80%]">
         {!isUser && (
-          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-soft ring-1 ring-border">
-            <img src={gpnLogo} alt="" width={32} height={32} className="h-7 w-7 object-contain" />
+          <div className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-brand-soft ring-1 ring-border">
+            <img
+              src={debasisAvatar}
+              alt="Debasis"
+              width={512}
+              height={512}
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
           </div>
         )}
         <div
