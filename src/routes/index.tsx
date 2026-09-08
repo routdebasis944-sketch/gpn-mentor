@@ -567,7 +567,33 @@ function MessageBubble({ message }: { message: Message }) {
               <span className="gpn-dot h-2 w-2 rounded-full bg-saffron" />
             </div>
           ) : isUser ? (
-            <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+            <div className="space-y-2">
+              {message.attachments?.length ? (
+                <div className="flex flex-col gap-2">
+                  {message.attachments.map((a) =>
+                    a.isImage ? (
+                      <img
+                        key={a.id}
+                        src={a.dataUrl}
+                        alt={a.name}
+                        className="max-h-64 w-full max-w-xs rounded-xl object-cover shadow-sm"
+                      />
+                    ) : (
+                      <span
+                        key={a.id}
+                        className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2"
+                      >
+                        <FileText className="h-4 w-4 shrink-0" />
+                        <span className="truncate text-xs">{a.name}</span>
+                      </span>
+                    ),
+                  )}
+                </div>
+              ) : null}
+              {message.content && (
+                <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+              )}
+            </div>
           ) : (
             <div className="gpn-prose">
               <ReactMarkdown
