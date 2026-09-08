@@ -3,8 +3,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Send, GraduationCap, PlayCircle, Briefcase, BookOpen } from "lucide-react";
-import gpnLogo from "@/assets/gpn-logo.png";
-import { GPN_SYSTEM_PROMPT, GPN_WELCOME, GPN_WELCOME_HI } from "@/lib/gpn-prompt";
+import debasisAvatar from "@/assets/debasis-avatar.png";
+import { GPN_SYSTEM_PROMPT, GPN_WELCOME, GPN_GREETING_HI } from "@/lib/gpn-prompt";
 
 // Extracts a YouTube video ID from watch / youtu.be / shorts / embed URLs.
 function getYouTubeId(url: string): string | null {
