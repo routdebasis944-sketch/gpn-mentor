@@ -9,7 +9,7 @@ import {
   Briefcase,
   BookOpen,
   Paperclip,
-  ImageIcon,
+  Image as ImageIcon,
   Camera,
   FileText,
   X,
