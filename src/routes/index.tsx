@@ -163,25 +163,49 @@ function GpnChat() {
     };
   }, []);
 
-  const sendPrompt = useCallback(async (promptText: string) => {
+  const sendPrompt = useCallback(async (promptText: string, files: Attachment[] = []) => {
     const text = promptText.trim();
-    if (!text || isStreaming) return;
+    if ((!text && files.length === 0) || isStreaming) return;
 
     setInput("");
+    setAttachments([]);
     setIsStreaming(true);
 
-    const userMsg: Message = { role: "user", content: text };
+    const userMsg: Message = {
+      role: "user",
+      content: text,
+      ...(files.length ? { attachments: files } : {}),
+    };
     const assistantMsg: Message = { role: "assistant", content: "", streaming: true };
 
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
+
+    const toBlocks = (m: Message) => {
+      if (m.role !== "user" || !m.attachments?.length) return m.content;
+      const blocks: unknown[] = [];
+      if (m.content) blocks.push({ type: "text", text: m.content });
+      for (const a of m.attachments) {
+        if (a.isImage) {
+          blocks.push({ type: "image_url", image_url: { url: a.dataUrl } });
+        } else {
+          blocks.push({
+            type: "file",
+            file: { filename: a.name, file_data: a.dataUrl },
+          });
+        }
+      }
+      if (!m.content) blocks.unshift({ type: "text", text: "Please review this attachment." });
+      return blocks;
+    };
 
     // Build the payload sent upstream: persona as a system message, then the
     // full prior conversation, then the new user turn.
     const payloadMessages = [
       { role: "system", content: GPN_SYSTEM_PROMPT },
-      ...messages.map((m) => ({ role: m.role, content: m.content })),
-      { role: "user", content: text },
+      ...messages.map((m) => ({ role: m.role, content: toBlocks(m) })),
+      { role: "user", content: toBlocks(userMsg) },
     ];
+
 
     const controller = new AbortController();
     abortRef.current = controller;
