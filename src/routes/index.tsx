@@ -303,11 +303,19 @@ function GpnChat() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendPrompt(input);
+      sendPrompt(input, attachments);
     }
   };
 
+  const handleFiles = async (list: FileList | null) => {
+    if (!list?.length) return;
+    const picked = Array.from(list).slice(0, 5);
+    const read = await Promise.all(picked.map(readFileAsAttachment));
+    setAttachments((prev) => [...prev, ...read].slice(0, 5));
+  };
+
   const showSuggestions = messages.length === 1;
+  const canSend = (!!input.trim() || attachments.length > 0) && !isStreaming;
 
   return (
     <div className="flex h-dvh flex-col bg-background text-foreground">
