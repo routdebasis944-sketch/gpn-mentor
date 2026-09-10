@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -12,8 +12,10 @@ import {
   Image as ImageIcon,
   Camera,
   FileText,
+  FlaskConical,
   X,
 } from "lucide-react";
+
 import debasisAvatar from "@/assets/debasis-avatar.png";
 import { GPN_SYSTEM_PROMPT, GPN_WELCOME, GPN_GREETING_HI } from "@/lib/gpn-prompt";
 
@@ -339,10 +341,18 @@ function GpnChat() {
               GPN AI Powered by Debasis
             </p>
           </div>
+          <Link
+            to="/lab"
+            className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-white/20 transition hover:bg-white/20"
+          >
+            <FlaskConical className="h-3.5 w-3.5" />
+            3D Lab
+          </Link>
           <span className="hidden items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/90 ring-1 ring-white/20 sm:inline-flex">
             <GraduationCap className="h-3.5 w-3.5" />
             Diploma-first
           </span>
+
         </div>
       </header>
 
