@@ -1,5 +1,5 @@
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Environment, Lightformer, Text, ContactShadows } from "@react-three/drei";
+import { OrbitControls, Environment, Lightformer, ContactShadows } from "@react-three/drei";
 import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
@@ -82,9 +82,6 @@ function Battery({ voltage }: { voltage: number }) {
         <cylinderGeometry args={[0.09, 0.09, 0.25, 12]} />
         <meshStandardMaterial color="#4a5568" metalness={0.8} roughness={0.25} />
       </mesh>
-      <Text position={[0, 0, 0.47]} fontSize={0.22} color="#f5e6c8" anchorY="middle">
-        {`${voltage.toFixed(0)} V`}
-      </Text>
     </group>
   );
 }
@@ -162,14 +159,6 @@ function Resistor({ resistance }: { resistance: number }) {
         </mesh>
       ))}
 
-      <Text
-        position={[0, 0, 0.3]}
-        rotation-z={-Math.PI / 2}
-        fontSize={0.2}
-        color="#f5e6c8"
-      >
-        {`${resistance.toFixed(0)} Ω`}
-      </Text>
     </group>
   );
 }
@@ -276,9 +265,6 @@ function Circuit({ closed, onToggle, voltage, resistance }: Props) {
         <Electron key={p} progress={p} live={live} />
       ))}
 
-      <Text position={[0, 1.6, -1.7]} fontSize={0.28} color="#f5e6c8" anchorY="middle">
-        {closed ? `I = ${current.toFixed(2)} A` : "Circuit open"}
-      </Text>
 
       <ContactShadows position={[0, -0.01, 0]} opacity={0.45} scale={12} blur={2.4} far={4} />
     </group>
