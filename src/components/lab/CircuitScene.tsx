@@ -151,15 +151,17 @@ function Resistor({ resistance }: { resistance: number }) {
         <cylinderGeometry args={[0.22, 0.22, 1.0, 20]} />
         <meshStandardMaterial color="#c8a97e" roughness={0.7} />
       </mesh>
-      {[-0.28, 0, 0.28].map((y, i) => (
-        <mesh key={i} position={[0, y, 0]}>
+      {([
+        [-0.28, "#8b3a1f"],
+        [0, "#1c1c1c"],
+        [0.28, "#c9a227"],
+      ] as const).map(([y, c]) => (
+        <mesh key={c} position={[0, y, 0]}>
           <cylinderGeometry args={[0.23, 0.23, 0.1, 20]} />
-          <meshStandardMaterial
-            color={["#8b3a1f", "#1c1c1c", "#c9a227"][i]}
-            roughness={0.6}
-          />
+          <meshStandardMaterial color={c} roughness={0.6} />
         </mesh>
       ))}
+
       <Text
         position={[0, 0, 0.3]}
         rotation-z={-Math.PI / 2}
