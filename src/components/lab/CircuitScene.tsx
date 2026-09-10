@@ -67,7 +67,7 @@ function Wire({
   );
 }
 
-function Battery({ voltage }: { voltage: number }) {
+function Battery() {
   return (
     <group position={[-2.4, 0.35, 0.9]}>
       <mesh castShadow>
@@ -141,7 +141,7 @@ function Switch({ closed, onToggle }: { closed: boolean; onToggle: () => void })
   );
 }
 
-function Resistor({ resistance }: { resistance: number }) {
+function Resistor() {
   return (
     <group position={[2.4, 0.3, 0.9]} rotation-z={Math.PI / 2}>
       <mesh castShadow>
@@ -256,9 +256,9 @@ function Circuit({ closed, onToggle, voltage, resistance }: Props) {
       <Wire from={[0, 0.2, -1.7]} to={[-2.4, 0.2, -1.7]} live={live} />
       <Wire from={[-2.4, 0.2, -1.7]} to={[-2.4, 0.2, 0.9]} live={live} />
 
-      <Battery voltage={voltage} />
+      <Battery />
       <Switch closed={closed} onToggle={onToggle} />
-      <Resistor resistance={resistance} />
+      <Resistor />
       <Bulb brightness={brightness} />
 
       {[0, 0.25, 0.5, 0.75].map((p) => (
