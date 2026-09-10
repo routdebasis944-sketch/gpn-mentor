@@ -1,12 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { ArrowLeft, Video, Link2, RotateCcw, Zap, MousePointerClick } from "lucide-react";
 import debasisAvatar from "@/assets/debasis-avatar.png";
 
 const CircuitScene = lazy(() => import("@/components/lab/CircuitScene"));
 
 export const Route = createFileRoute("/lab")({
-  ssr: false,
   head: () => ({
     meta: [
       { title: "3D Virtual Lab — Gpn AI Polytechnic Practicals" },
@@ -46,6 +45,8 @@ function VirtualLab() {
   const [voltage, setVoltage] = useState(9);
   const [resistance, setResistance] = useState(10);
   const [step, setStep] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const current = closed ? voltage / Math.max(resistance, 1) : 0;
 
@@ -188,20 +189,26 @@ function VirtualLab() {
               </span>
             </div>
             <div className="relative h-[22rem] w-full sm:h-[26rem] lg:h-[30rem]">
-              <Suspense
-                fallback={
-                  <div className="flex h-full w-full items-center justify-center bg-[#0d1626] text-sm text-white/70">
-                    Loading 3D lab…
-                  </div>
-                }
-              >
-                <CircuitScene
-                  closed={closed}
-                  onToggle={() => setClosed((c) => !c)}
-                  voltage={voltage}
-                  resistance={resistance}
-                />
-              </Suspense>
+              {mounted ? (
+                <Suspense
+                  fallback={
+                    <div className="flex h-full w-full items-center justify-center bg-[#0d1626] text-sm text-white/70">
+                      Loading 3D lab…
+                    </div>
+                  }
+                >
+                  <CircuitScene
+                    closed={closed}
+                    onToggle={() => setClosed((c) => !c)}
+                    voltage={voltage}
+                    resistance={resistance}
+                  />
+                </Suspense>
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-[#0d1626] text-sm text-white/70">
+                  Loading 3D lab…
+                </div>
+              )}
             </div>
           </div>
 
