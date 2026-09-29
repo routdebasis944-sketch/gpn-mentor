@@ -3,11 +3,14 @@ import { OrbitControls, Environment, Lightformer, ContactShadows } from "@react-
 import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
+export type SimMode = "ohms_law" | "series_parallel" | "wheatstone";
 type Props = {
   closed: boolean;
   onToggle: () => void;
-  voltage: number;
-  resistance: number;
+  current: number;
+  mode: SimMode;
+  arrangement?: "series" | "parallel";
+  deflection?: number;
 };
 
 const NAVY = "#1b2a4a";
@@ -141,9 +144,15 @@ function Switch({ closed, onToggle }: { closed: boolean; onToggle: () => void })
   );
 }
 
-function Resistor() {
+function Resistor({
+  position = [2.4, 0.3, 0.9],
+  flat = false,
+}: {
+  position?: [number, number, number];
+  flat?: boolean;
+}) {
   return (
-    <group position={[2.4, 0.3, 0.9]} rotation-z={Math.PI / 2}>
+    <group position={position} rotation-z={Math.PI / 2} rotation-y={flat ? Math.PI / 2 : 0}>
       <mesh castShadow>
         <cylinderGeometry args={[0.22, 0.22, 1.0, 20]} />
         <meshStandardMaterial color="#c8a97e" roughness={0.7} />
@@ -159,6 +168,35 @@ function Resistor() {
         </mesh>
       ))}
 
+    </group>
+  );
+}
+
+function Galvanometer({ deflection, live }: { deflection: number; live: boolean }) {
+  const needle = useRef<THREE.Group>(null);
+  useFrame((_, delta) => {
+    if (!needle.current) return;
+    const target = live ? -deflection * 1.1 : 0;
+    needle.current.rotation.z += (target - needle.current.rotation.z) * (1 - Math.exp(-8 * Math.min(delta, 0.05)));
+  });
+  return (
+    <group position={[0, 0.45, 0.1]}>
+      <mesh castShadow>
+        <cylinderGeometry args={[0.55, 0.55, 0.2, 32]} />
+        <meshStandardMaterial color="#f3ead8" roughness={0.5} />
+      </mesh>
+      <mesh position={[0, 0.02, 0]} rotation-x={-Math.PI / 2}>
+        <ringGeometry args={[0.5, 0.56, 32]} />
+        <meshStandardMaterial color={NAVY} />
+      </mesh>
+      <group rotation-x={-Math.PI / 2} position={[0, 0.12, 0]}>
+        <group ref={needle}>
+          <mesh position={[0, 0.22, 0]}>
+            <boxGeometry args={[0.03, 0.44, 0.02]} />
+            <meshStandardMaterial color="#c8452b" emissive="#7a1f10" emissiveIntensity={0.5} />
+          </mesh>
+        </group>
+      </group>
     </group>
   );
 }
@@ -238,10 +276,9 @@ function Electron({ progress, live }: { progress: number; live: boolean }) {
   );
 }
 
-function Circuit({ closed, onToggle, voltage, resistance }: Props) {
+function Circuit({ closed, onToggle, current, mode, arrangement = "series", deflection = 0 }: Props) {
   const live = closed;
-  const current = closed ? voltage / Math.max(resistance, 1) : 0;
-  const brightness = Math.min(1, current / 1.2);
+  const brightness = closed ? Math.min(1, current / 1.2) : 0;
 
   return (
     <group>
@@ -258,7 +295,28 @@ function Circuit({ closed, onToggle, voltage, resistance }: Props) {
 
       <Battery />
       <Switch closed={closed} onToggle={onToggle} />
-      <Resistor />
+      {mode === "ohms_law" && <Resistor />}
+      {mode === "series_parallel" &&
+        (arrangement === "series" ? (
+          <>
+            <Resistor position={[2.4, 0.3, 1.2]} />
+            <Resistor position={[2.4, 0.3, -0.6]} />
+          </>
+        ) : (
+          <>
+            <Resistor position={[1.9, 0.3, 0.3]} />
+            <Resistor position={[2.9, 0.3, 0.3]} />
+          </>
+        ))}
+      {mode === "wheatstone" && (
+        <>
+          <Resistor position={[-1.1, 0.3, 0.8]} flat />
+          <Resistor position={[1.1, 0.3, 0.8]} flat />
+          <Resistor position={[-1.1, 0.3, -0.6]} flat />
+          <Resistor position={[1.1, 0.3, -0.6]} flat />
+          <Galvanometer deflection={deflection} live={live} />
+        </>
+      )}
       <Bulb brightness={brightness} />
 
       {[0, 0.25, 0.5, 0.75].map((p) => (
