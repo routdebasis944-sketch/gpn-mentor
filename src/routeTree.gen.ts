@@ -10,13 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as LabRouteImport } from './routes/lab'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
+import { Route as ApiPublicSyncLabsRouteImport } from './routes/api/public/sync-labs'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabRoute = LabRouteImport.update({
@@ -34,39 +41,61 @@ const ApiTtsRoute = ApiTtsRouteImport.update({
   path: '/api/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncLabsRoute = ApiPublicSyncLabsRouteImport.update({
+  id: '/api/public/sync-labs',
+  path: '/api/public/sync-labs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/lab': typeof LabRoute
   '/api/chat': typeof ApiChatRoute
   '/api/tts': typeof ApiTtsRoute
+  '/api/public/sync-labs': typeof ApiPublicSyncLabsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/lab': typeof LabRoute
   '/api/chat': typeof ApiChatRoute
   '/api/tts': typeof ApiTtsRoute
+  '/api/public/sync-labs': typeof ApiPublicSyncLabsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/lab': typeof LabRoute
   '/api/chat': typeof ApiChatRoute
   '/api/tts': typeof ApiTtsRoute
+  '/api/public/sync-labs': typeof ApiPublicSyncLabsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lab' | '/api/chat' | '/api/tts'
+  fullPaths:
+    '/' | '/auth' | '/lab' | '/api/chat' | '/api/tts' | '/api/public/sync-labs'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lab' | '/api/chat' | '/api/tts'
-  id: '__root__' | '/' | '/lab' | '/api/chat' | '/api/tts'
+  to:
+    '/' | '/auth' | '/lab' | '/api/chat' | '/api/tts' | '/api/public/sync-labs'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/lab'
+    | '/api/chat'
+    | '/api/tts'
+    | '/api/public/sync-labs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   LabRoute: typeof LabRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiTtsRoute: typeof ApiTtsRoute
+  ApiPublicSyncLabsRoute: typeof ApiPublicSyncLabsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -76,6 +105,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab': {
@@ -99,14 +135,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-labs': {
+      id: '/api/public/sync-labs'
+      path: '/api/public/sync-labs'
+      fullPath: '/api/public/sync-labs'
+      preLoaderRoute: typeof ApiPublicSyncLabsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   LabRoute: LabRoute,
   ApiChatRoute: ApiChatRoute,
   ApiTtsRoute: ApiTtsRoute,
+  ApiPublicSyncLabsRoute: ApiPublicSyncLabsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

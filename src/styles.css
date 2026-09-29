@@ -334,3 +334,25 @@
     }
   }
 }
+
+.gpn-confetti {
+  position: absolute;
+  top: -12px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  animation-name: gpn-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes gpn-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(32rem) rotate(540deg); opacity: 0.2; }
+}
+.gpn-pop { animation: gpn-pop 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+@keyframes gpn-pop {
+  0% { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.gpn-success { animation: gpn-fade 0.3s ease-out both; }
+@keyframes gpn-fade { from { opacity: 0; } to { opacity: 1; } }
