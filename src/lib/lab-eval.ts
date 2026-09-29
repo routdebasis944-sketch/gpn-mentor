@@ -21,7 +21,7 @@ export type LabRun = {
   resistance: number;
   readings: Reading[];
   overloaded: boolean;
-  answers: { r?: string; series?: string; parallel?: string; x?: string };
+  answers: { r?: string | undefined; series?: string | undefined; parallel?: string | undefined; x?: string | undefined };
 };
 
 export type Check = { ok: boolean; mistake: string };

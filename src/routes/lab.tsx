@@ -258,7 +258,7 @@ function Workspace({ module, sim, userId }: { module: Module; sim: SimType; user
   const [s, setS] = useState(15);
   const [readings, setReadings] = useState<Reading[]>([]);
   const [overloaded, setOverloaded] = useState(false);
-  const [answers, setAnswers] = useState<{ r?: string; series?: string; parallel?: string; x?: string }>({});
+  const [answers, setAnswers] = useState<{ r?: string | undefined; series?: string | undefined; parallel?: string | undefined; x?: string | undefined }>({});
   const [step, setStep] = useState(0);
   const [result, setResult] = useState<{ score: number; mistakes: string[]; saved?: string } | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -540,7 +540,7 @@ function RangeInput({ label, min, max, value, onChange }: { label: string; min: 
   );
 }
 
-function AnswerInput({ label, value, onChange }: { label: string; value?: string; onChange: (v: string) => void }) {
+function AnswerInput({ label, value, onChange }: { label: string; value?: string | undefined; onChange: (v: string) => void }) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-medium text-muted-foreground">{label}</span>
