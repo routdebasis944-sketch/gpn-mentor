@@ -14,7 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      lab_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          mistakes: Json
+          module_id: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mistakes?: Json
+          module_id: string
+          score: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mistakes?: Json
+          module_id?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lab_attempts_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "lab_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lab_modules: {
+        Row: {
+          branch: string
+          created_at: string
+          description: string | null
+          id: string
+          is_official: boolean
+          semester: number
+          sim_type: string | null
+          source_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          branch: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_official?: boolean
+          semester: number
+          sim_type?: string | null
+          source_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          branch?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_official?: boolean
+          semester?: number
+          sim_type?: string | null
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lab_sync_state: {
+        Row: {
+          id: number
+          last_added: number
+          last_error: string | null
+          last_run_at: string | null
+          locked_until: string | null
+        }
+        Insert: {
+          id?: number
+          last_added?: number
+          last_error?: string | null
+          last_run_at?: string | null
+          locked_until?: string | null
+        }
+        Update: {
+          id?: number
+          last_added?: number
+          last_error?: string | null
+          last_run_at?: string | null
+          locked_until?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
