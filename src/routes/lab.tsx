@@ -3,7 +3,7 @@ import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  ArrowLeft, Video, Link2, RotateCcw, Zap, MousePointerClick, RefreshCw, FileText,
+  ArrowLeft, Video, Link2, RotateCcw, RefreshCw, FileText,
   Volume2, CheckCircle2, AlertTriangle, LogIn, LogOut, ClipboardList, X,
 } from "lucide-react";
 import debasisAvatar from "@/assets/debasis-avatar.png";
