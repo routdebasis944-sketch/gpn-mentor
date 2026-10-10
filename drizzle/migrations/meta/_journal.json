@@ -8,6 +8,13 @@
       "when": 1790692849980,
       "tag": "0000_virtual_lab",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791648204379,
+      "tag": "0001_syllabus_progress",
+      "breakpoints": true
     }
   ]
 }
