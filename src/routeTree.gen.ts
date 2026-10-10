@@ -11,7 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CareerRouteImport } from './routes/career'
+import { Route as InterviewRouteImport } from './routes/interview'
 import { Route as LabRouteImport } from './routes/lab'
+import { Route as TrackerRouteImport } from './routes/tracker'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiInterviewRouteImport } from './routes/api/interview'
 import { Route as ApiResumeRouteImport } from './routes/api/resume'
@@ -28,9 +31,24 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CareerRoute = CareerRouteImport.update({
+  id: '/career',
+  path: '/career',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InterviewRoute = InterviewRouteImport.update({
+  id: '/interview',
+  path: '/interview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LabRoute = LabRouteImport.update({
   id: '/lab',
   path: '/lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackerRoute = TrackerRouteImport.update({
+  id: '/tracker',
+  path: '/tracker',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -62,7 +80,10 @@ const ApiPublicSyncLabsRoute = ApiPublicSyncLabsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/career': typeof CareerRoute
+  '/interview': typeof InterviewRoute
   '/lab': typeof LabRoute
+  '/tracker': typeof TrackerRoute
   '/api/chat': typeof ApiChatRoute
   '/api/interview': typeof ApiInterviewRoute
   '/api/resume': typeof ApiResumeRoute
@@ -72,7 +93,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/career': typeof CareerRoute
+  '/interview': typeof InterviewRoute
   '/lab': typeof LabRoute
+  '/tracker': typeof TrackerRoute
   '/api/chat': typeof ApiChatRoute
   '/api/interview': typeof ApiInterviewRoute
   '/api/resume': typeof ApiResumeRoute
@@ -83,7 +107,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/career': typeof CareerRoute
+  '/interview': typeof InterviewRoute
   '/lab': typeof LabRoute
+  '/tracker': typeof TrackerRoute
   '/api/chat': typeof ApiChatRoute
   '/api/interview': typeof ApiInterviewRoute
   '/api/resume': typeof ApiResumeRoute
@@ -95,7 +122,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/career'
+    | '/interview'
     | '/lab'
+    | '/tracker'
     | '/api/chat'
     | '/api/interview'
     | '/api/resume'
@@ -105,7 +135,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/career'
+    | '/interview'
     | '/lab'
+    | '/tracker'
     | '/api/chat'
     | '/api/interview'
     | '/api/resume'
@@ -115,7 +148,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/career'
+    | '/interview'
     | '/lab'
+    | '/tracker'
     | '/api/chat'
     | '/api/interview'
     | '/api/resume'
@@ -126,7 +162,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  CareerRoute: typeof CareerRoute
+  InterviewRoute: typeof InterviewRoute
   LabRoute: typeof LabRoute
+  TrackerRoute: typeof TrackerRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiInterviewRoute: typeof ApiInterviewRoute
   ApiResumeRoute: typeof ApiResumeRoute
@@ -150,11 +189,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/career': {
+      id: '/career'
+      path: '/career'
+      fullPath: '/career'
+      preLoaderRoute: typeof CareerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/interview': {
+      id: '/interview'
+      path: '/interview'
+      fullPath: '/interview'
+      preLoaderRoute: typeof InterviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lab': {
       id: '/lab'
       path: '/lab'
       fullPath: '/lab'
       preLoaderRoute: typeof LabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tracker': {
+      id: '/tracker'
+      path: '/tracker'
+      fullPath: '/tracker'
+      preLoaderRoute: typeof TrackerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -198,7 +258,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  CareerRoute: CareerRoute,
+  InterviewRoute: InterviewRoute,
   LabRoute: LabRoute,
+  TrackerRoute: TrackerRoute,
   ApiChatRoute: ApiChatRoute,
   ApiInterviewRoute: ApiInterviewRoute,
   ApiResumeRoute: ApiResumeRoute,
