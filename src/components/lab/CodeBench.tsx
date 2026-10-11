@@ -49,7 +49,7 @@ export default function CodeBench({ semester, evalRef }: { semester: number; eva
   const [runs, setRuns] = useState(0);
   const [lastError, setLastError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
-  useEffect(() => endRef.current?.scrollIntoView({ block: "nearest" }), [lines]);
+  useEffect(() => { endRef.current?.scrollIntoView({ block: "nearest" }); }, [lines]);
 
   const print = (t: string, kind: "in" | "out" | "err" | "sys" = "out") => setLines((l) => [...l, { t, kind }]);
 
