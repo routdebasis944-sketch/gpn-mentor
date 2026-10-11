@@ -337,7 +337,7 @@ function CircuitBench({ sim, evalRef }: { sim: SimType; evalRef: React.MutableRe
   const [overloaded, setOverloaded] = useState(false);
   const [answers, setAnswers] = useState<{ r?: string | undefined; series?: string | undefined; parallel?: string | undefined; x?: string | undefined }>({});
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => { setMounted(true); }, []);
 
   const current = closed ? computeCurrent(sim, voltage, resistance, arrangement, s) : 0;
   const deflection = wheatstoneDeflection(s);
