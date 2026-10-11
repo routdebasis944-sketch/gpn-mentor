@@ -39,7 +39,7 @@ function Interview() {
   const [err, setErr] = useState<string | null>(null);
   const [result, setResult] = useState<Evaluation | null>(null);
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => end.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }), [msgs, result]);
+  useEffect(() => { end.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [msgs, result]);
 
   const start = async (b: string) => {
     setBranch(b); setBusy(true); setErr(null); setAnswers([]); setResult(null);
