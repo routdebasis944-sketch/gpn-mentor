@@ -48,8 +48,11 @@ export default function CodeBench({ semester, evalRef }: { semester: number; eva
   const [cmd, setCmd] = useState("");
   const [runs, setRuns] = useState(0);
   const [lastError, setLastError] = useState<string | null>(null);
-  const endRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { endRef.current?.scrollIntoView({ block: "nearest" }); }, [lines]);
+  const termRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = termRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [lines]);
 
   const print = (t: string, kind: "in" | "out" | "err" | "sys" = "out") => setLines((l) => [...l, { t, kind }]);
 
@@ -111,7 +114,7 @@ export default function CodeBench({ semester, evalRef }: { semester: number; eva
         <button type="button" onClick={() => setLines([])} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm"><Trash2 className="h-4 w-4" /> Clear</button>
         <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground"><Terminal className="h-3.5 w-3.5" /> Runs: {runs}</span>
       </div>
-      <div className="h-48 overflow-auto bg-foreground p-3 font-mono text-xs leading-5">
+      <div ref={termRef} className="h-48 overflow-auto bg-foreground p-3 font-mono text-xs leading-5">
         {lines.map((l, i) => (
           <div key={i} className={l.kind === "err" ? "text-destructive" : l.kind === "in" ? "text-saffron" : l.kind === "sys" ? "text-background/50" : "text-background"}>{l.t}</div>
         ))}
@@ -120,7 +123,6 @@ export default function CodeBench({ semester, evalRef }: { semester: number; eva
           <input value={cmd} onChange={(e) => setCmd(e.target.value)} aria-label="Terminal input" placeholder="type a command…"
             className="flex-1 bg-transparent text-background outline-none placeholder:text-background/30" />
         </form>
-        <div ref={endRef} />
       </div>
     </BenchCard>
   );

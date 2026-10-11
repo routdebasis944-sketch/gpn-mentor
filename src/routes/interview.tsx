@@ -38,8 +38,11 @@ function Interview() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [result, setResult] = useState<Evaluation | null>(null);
-  const end = useRef<HTMLDivElement>(null);
-  useEffect(() => { end.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [msgs, result]);
+  const listRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [msgs, result, busy]);
 
   const start = async (b: string) => {
     setBranch(b); setBusy(true); setErr(null); setAnswers([]); setResult(null);
@@ -87,7 +90,7 @@ function Interview() {
         </section>
       ) : (
         <section className="flex flex-col rounded-2xl border border-border bg-card shadow-sm">
-          <div className="max-h-[60dvh] min-h-80 space-y-3 overflow-auto p-4">
+          <div ref={listRef} className="max-h-[60dvh] min-h-80 space-y-3 overflow-auto p-4">
             {msgs.map((m, i) => (
               <div key={i} className={`flex gap-2 ${m.from === "me" ? "flex-row-reverse" : ""}`}>
                 {m.from === "ai"
@@ -114,7 +117,6 @@ function Interview() {
                 {result.tips.length > 0 && <ul className="mt-3 list-disc pl-5 text-sm">{result.tips.map((t) => <li key={t}>{t}</li>)}</ul>}
               </div>
             )}
-            <div ref={end} />
           </div>
           <form onSubmit={send} className="flex gap-2 border-t border-border p-3">
             <button type="button" onClick={() => setBranch(null)} aria-label="Restart" className="rounded-xl border border-border px-3"><RotateCcw className="h-4 w-4" /></button>
