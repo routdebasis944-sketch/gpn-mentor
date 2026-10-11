@@ -1,13 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ShieldCheck, BarChart3, FileUser, MessagesSquare, FlaskConical } from "lucide-react";
 import debasisAvatar from "@/assets/debasis-avatar.png";
 
 const NAV = [
-  { to: "/tracker", label: "Syllabus Tracker" },
-  { to: "/career", label: "Resume Builder" },
-  { to: "/interview", label: "Mock Interview" },
-  { to: "/lab", label: "3D Lab" },
+  { to: "/tracker", label: "Syllabus Tracker", Icon: BarChart3 },
+  { to: "/career", label: "Resume Builder", Icon: FileUser },
+  { to: "/interview", label: "Mock Interview", Icon: MessagesSquare },
+  { to: "/lab", label: "3D Lab", Icon: FlaskConical },
 ] as const;
 
 export function SecureNote() {
@@ -40,8 +40,8 @@ export function ModuleShell({ title, subtitle, children }: { title: string; subt
           {NAV.map((n) => (
             <Link key={n.to} to={n.to} activeProps={{ className: "bg-saffron text-accent-foreground" }}
               inactiveProps={{ className: "bg-white/10 ring-1 ring-white/20" }}
-              className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium">
-              {n.label}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium">
+              <n.Icon className="h-3.5 w-3.5" /> {n.label}
             </Link>
           ))}
         </nav>

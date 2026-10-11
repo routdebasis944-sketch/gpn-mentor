@@ -12,7 +12,7 @@ import {
   Image as ImageIcon,
   Camera,
   FileText,
-  FlaskConical,
+  FlaskConical, BarChart3, FileUser, MessagesSquare,
   X,
 } from "lucide-react";
 
@@ -341,19 +341,21 @@ function GpnChat() {
               GPN AI Powered by Debasis
             </p>
           </div>
-          <Link
-            to="/lab"
-            className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-white/20 transition hover:bg-white/20"
-          >
-            <FlaskConical className="h-3.5 w-3.5" />
-            3D Lab
-          </Link>
-          <span className="hidden items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/90 ring-1 ring-white/20 sm:inline-flex">
-            <GraduationCap className="h-3.5 w-3.5" />
-            Diploma-first
-          </span>
 
         </div>
+        <nav className="mx-auto flex w-full max-w-3xl gap-1.5 overflow-x-auto px-4 pb-3" aria-label="GPN AI tools">
+          {([
+            { to: "/tracker", label: "Syllabus Tracker", Icon: BarChart3 },
+            { to: "/career", label: "Resume Builder", Icon: FileUser },
+            { to: "/interview", label: "Mock Interview", Icon: MessagesSquare },
+            { to: "/lab", label: "3D Lab", Icon: FlaskConical },
+          ] as const).map(({ to, label, Icon }) => (
+            <Link key={to} to={to}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-white/20 transition hover:bg-white/20">
+              <Icon className="h-3.5 w-3.5" /> {label}
+            </Link>
+          ))}
+        </nav>
       </header>
 
       {/* Messages */}
