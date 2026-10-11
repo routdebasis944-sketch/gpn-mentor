@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Download, Sparkles as _unused, Wand2 } from "lucide-react";
+import { Download, Wand2 } from "lucide-react";
 import { ModuleShell } from "@/components/ModuleShell";
-
-void _unused;
 
 export const Route = createFileRoute("/career")({
   head: () => ({
