@@ -7,7 +7,14 @@ const Body = z.discriminatedUnion("step", [
   z.object({ step: z.literal("questions"), branch: z.string().min(1).max(80) }),
   z.object({
     step: z.literal("evaluate"), branch: z.string().min(1).max(80),
-    qa: z.array(z.object({ q: z.string().max(600), a: z.string().max(3000) })).length(3),
+    lang: z.enum(["en", "hi"]).default("en"),
+    qa: z.array(z.object({
+      q: z.string().max(600), a: z.string().max(3000),
+      delivery: z.object({
+        wpm: z.number(), fillers: z.number(), fillerWords: z.array(z.string()).max(50), longPauses: z.number(),
+        longestPause: z.number(), startDelay: z.number(), confidence: z.number(), clarity: z.number(), hesitation: z.boolean(),
+      }).nullable().optional(),
+    })).length(3),
   }),
 ]);
 
@@ -28,13 +35,15 @@ export const Route = createFileRoute("/api/interview")({
             return Response.json({ questions: r.questions.slice(0, 3) });
           }
           const r = await askJSON(
-            "You are a fair, encouraging technical interviewer for diploma engineering students. Evaluate each answer for technical correctness and clarity. Score each 0-10. Give short constructive feedback and the key points of an ideal answer. Write in simple English (Hinglish allowed). Empty or irrelevant answers score 0.",
-            `Branch: ${d.branch}\n` + d.qa.map((x, i) => `Q${i + 1}: ${x.q}\nAnswer: ${x.a || "(no answer)"}`).join("\n\n"),
+            `You are Debasis, a fair, encouraging technical interviewer for diploma engineering students. Evaluate each answer for technical correctness and clarity. Score each 0-10. Give short constructive feedback and the key points of an ideal answer. Empty or irrelevant answers score 0.
+For "delivery" give direct, kind coaching on HOW the student spoke, using the measured delivery metrics (words per minute, filler words, long pauses, start delay, confidence %, clarity %). Example style: "आपका जवाब सही था, लेकिन आपकी आवाज़ में हिचकिचाहट थी। अगली बार बिना अटके बोलें।" If an answer was typed (no metrics), say it was typed and suggest practising it aloud. "deliverySummary" sums up their overall speaking style in 1-2 sentences.
+Write ALL text fields ${d.lang === "hi" ? "in simple Hindi (Devanagari)" : "in simple English"}.`,
+            `Branch: ${d.branch}\n` + d.qa.map((x, i) => `Q${i + 1}: ${x.q}\nAnswer: ${x.a || "(no answer)"}\nDelivery metrics: ${x.delivery ? JSON.stringify(x.delivery) : "typed answer, no voice"}`).join("\n\n"),
             { name: "evaluation", schema: {
-              type: "object", additionalProperties: false, required: ["items", "overall", "tips"],
+              type: "object", additionalProperties: false, required: ["items", "overall", "deliverySummary", "tips"],
               properties: {
-                items: { type: "array", items: { type: "object", additionalProperties: false, required: ["score", "feedback", "ideal"], properties: { score: { type: "number" }, feedback: S, ideal: S } } },
-                overall: S, tips: { type: "array", items: S },
+                items: { type: "array", items: { type: "object", additionalProperties: false, required: ["score", "feedback", "ideal", "delivery"], properties: { score: { type: "number" }, feedback: S, ideal: S, delivery: S } } },
+                overall: S, deliverySummary: S, tips: { type: "array", items: S },
               },
             } },
           );
