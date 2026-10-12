@@ -53,7 +53,7 @@ function Meter({ label, value, tone }: { label: string; value: number; tone: "go
 }
 
 function DeliveryPanel({ d, lang }: { d: Delivery; lang: Lang }) {
-  const tone = (v: number) => (v >= 75 ? "good" : v >= 50 ? "mid" : "bad") as const;
+  const tone = (v: number): "good" | "mid" | "bad" => (v >= 75 ? "good" : v >= 50 ? "mid" : "bad");
   return (
     <div className="mt-2 w-full max-w-[80%] self-end rounded-2xl border border-border bg-card p-3 text-xs shadow-sm">
       <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold"><Gauge className="h-4 w-4 text-saffron" /> Delivery Analytics</p>
