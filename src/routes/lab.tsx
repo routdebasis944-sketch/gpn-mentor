@@ -1,3 +1,4 @@
+import { speakAsDebasis } from "@/lib/voice";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";

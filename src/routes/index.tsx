@@ -1,3 +1,4 @@
+import { speakAsDebasis } from "@/lib/voice";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
