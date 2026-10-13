@@ -143,6 +143,7 @@ function Interview() {
       if (r) { setInput(r.text); setPendingDelivery(r.text ? r.delivery : null); }
     } else {
       setPendingDelivery(null);
+      stopSpeaking();
       await voice.start();
     }
   };
