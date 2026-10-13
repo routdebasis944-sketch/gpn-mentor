@@ -5,6 +5,7 @@ import { askJSON, errResponse } from "@/lib/ai.server";
 const S = { type: "string" };
 const Body = z.discriminatedUnion("step", [
   z.object({ step: z.literal("questions"), branch: z.string().min(1).max(80) }),
+  z.object({ step: z.literal("intro"), branch: z.string().min(1).max(80), lang: z.enum(["en", "hi"]).default("en"), text: z.string().max(3000) }),
   z.object({
     step: z.literal("evaluate"), branch: z.string().min(1).max(80),
     lang: z.enum(["en", "hi"]).default("en"),
@@ -26,6 +27,14 @@ export const Route = createFileRoute("/api/interview")({
         if (!p.success) return Response.json({ error: "Invalid request" }, { status: 400 });
         const d = p.data;
         try {
+          if (d.step === "intro") {
+            const r = await askJSON<{ name: string; college: string; branch: string; ack: string }>(
+              `You are Debasis, a warm technical interviewer. The student just introduced themselves. Extract their name, college and branch (empty string if not mentioned; never invent). Then write "ack": 1-2 short spoken sentences that politely thank them by name, mention their college and branch if given, and say you'll now ask 3 technical questions. Write "ack" ${d.lang === "hi" ? "in simple Hindi (Devanagari)" : "in simple English"}. Do not include the questions.`,
+              `Selected branch: ${d.branch}\nIntroduction: ${d.text || "(no introduction)"}`,
+              { name: "intro", schema: { type: "object", additionalProperties: false, required: ["name", "college", "branch", "ack"], properties: { name: S, college: S, branch: S, ack: S } } },
+            );
+            return Response.json(r);
+          }
           if (d.step === "questions") {
             const r = await askJSON<{ questions: string[] }>(
               "You are a technical interviewer hiring Diploma (polytechnic) engineers in India for jobs like SSC JE, RRB JE, PSU technician and private companies (L&T, Tata, Maruti). Ask exactly 3 short technical questions for the given branch based on the SCTE&VT Odisha diploma syllabus: one easy, one medium, one practical/applied. Each question must be answerable in 2-4 sentences.",
