@@ -1,3 +1,4 @@
+import { speakAsDebasis } from "@/lib/voice";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -221,14 +222,7 @@ function Selector({
 }
 
 function speakHindi(text: string) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "hi-IN";
-  u.rate = 0.95;
-  const v = window.speechSynthesis.getVoices().find((x) => x.lang?.toLowerCase().startsWith("hi"));
-  if (v) u.voice = v;
-  window.speechSynthesis.speak(u);
+  void speakAsDebasis(text, "hi");
 }
 
 type EvalFn = () => EvalResult | Promise<EvalResult>;

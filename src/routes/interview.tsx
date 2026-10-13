@@ -6,6 +6,7 @@ import { ModuleShell } from "@/components/ModuleShell";
 import { INTERVIEW_BRANCHES } from "@/lib/syllabus";
 import { clarityLabel, type Delivery } from "@/lib/delivery";
 import { useVoiceAnswer } from "@/hooks/use-voice-answer";
+import { speakAsDebasis, stopSpeaking } from "@/lib/voice";
 
 export const Route = createFileRoute("/interview")({
   head: () => ({
@@ -36,8 +37,8 @@ async function call(body: object) {
 }
 
 const T = {
-  en: { hi: (b: string) => `Namaste! I'm Debasis, your technical interviewer for ${b}. I'll ask you 3 questions, one by one. Tap the mic to answer by voice — I'll also analyse your confidence and delivery.`, q: "Question", of: "of", eval: "Thank you! Let me evaluate your answers…" },
-  hi: { hi: (b: string) => `नमस्ते! मैं देबाशीष हूँ, ${b} के लिए आपका तकनीकी इंटरव्यूअर। मैं एक-एक करके 3 सवाल पूछूँगा। माइक दबाकर बोलकर जवाब दें — मैं आपके आत्मविश्वास और बोलने के तरीके का भी विश्लेषण करूँगा।`, q: "सवाल", of: "/", eval: "धन्यवाद! अब मैं आपके जवाबों का मूल्यांकन कर रहा हूँ…" },
+  en: { hi: (_b: string) => "Namaste! Welcome to your mock interview. I'm Debasis. Please introduce yourself and tell me your name, college, and branch.", q: "Question", of: "of", eval: "Thank you! Let me evaluate your answers…" },
+  hi: { hi: (_b: string) => "नमस्ते! आपके मॉक इंटरव्यू में आपका स्वागत है। मैं देबाशीष हूँ। कृपया अपना परिचय दीजिए — अपना नाम, कॉलेज और ब्रांच बताइए।", q: "सवाल", of: "/", eval: "धन्यवाद! अब मैं आपके जवाबों का मूल्यांकन कर रहा हूँ…" },
 };
 
 function Meter({ label, value, tone }: { label: string; value: number; tone: "good" | "mid" | "bad" }) {
@@ -92,6 +93,10 @@ function Interview() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [result, setResult] = useState<Evaluation | null>(null);
+  const [introDone, setIntroDone] = useState(false);
+  const qPromise = useRef<Promise<string[]> | null>(null);
+  const say = (text: string) => { void speakAsDebasis(text, lang); };
+  useEffect(() => () => stopSpeaking(), []);
   const voice = useVoiceAnswer(lang === "hi" ? "hi-IN" : "en-IN");
   const listRef = useRef<HTMLDivElement>(null);
   const t = T[lang];
@@ -105,13 +110,29 @@ function Interview() {
     if (voice.recording) setInput(voice.transcript);
   }, [voice.recording, voice.transcript]);
 
-  const start = async (b: string) => {
-    setBranch(b); setBusy(true); setErr(null); setAnswers([]); setResult(null); setInput(""); setPendingDelivery(null);
-    setMsgs([{ from: "ai", text: t.hi(b) }]);
+  const start = (b: string) => {
+    setBranch(b); setErr(null); setAnswers([]); setResult(null); setInput(""); setPendingDelivery(null);
+    setIntroDone(false); setQuestions([]);
+    const greet = t.hi(b);
+    setMsgs([{ from: "ai", text: greet }]);
+    say(greet);
+    const p = call({ step: "questions", branch: b }).then((r: { questions: string[] }) => r.questions);
+    p.catch(() => undefined);
+    qPromise.current = p;
+  };
+
+  const submitIntro = async (text: string) => {
+    setMsgs((m) => [...m, { from: "me", text }]);
+    setBusy(true); setErr(null);
     try {
-      const { questions: q } = await call({ step: "questions", branch: b });
-      setQuestions(q);
-      setMsgs((m) => [...m, { from: "ai", text: `${t.q} 1 ${t.of} 3: ${q[0]}` }]);
+      const [ack, q] = await Promise.all([
+        call({ step: "intro", branch, lang, text }).then((r: { ack: string }) => r.ack).catch(() => (lang === "hi" ? "परिचय के लिए धन्यवाद! अब मैं आपसे 3 तकनीकी सवाल पूछूँगा।" : "Thank you for the introduction! Now I'll ask you 3 technical questions.")),
+        qPromise.current ?? Promise.reject(new Error("Failed")),
+      ]);
+      setQuestions(q); setIntroDone(true);
+      const q1 = `${t.q} 1 ${t.of} 3: ${q[0]}`;
+      setMsgs((m) => [...m, { from: "ai", text: ack }, { from: "ai", text: q1 }]);
+      say(`${ack} ${q1}`);
     } catch (e) { setErr(e instanceof Error ? e.message : "Failed"); }
     setBusy(false);
   };
@@ -122,6 +143,7 @@ function Interview() {
       if (r) { setInput(r.text); setPendingDelivery(r.text ? r.delivery : null); }
     } else {
       setPendingDelivery(null);
+      stopSpeaking();
       await voice.start();
     }
   };
@@ -133,6 +155,12 @@ function Interview() {
       return; // let the student review the transcript first
     }
     const a = input.trim();
+    if (!introDone) {
+      if (!a || busy) return;
+      setInput(""); setPendingDelivery(null);
+      await submitIntro(a);
+      return;
+    }
     if (!a || busy || answers.length >= 3) return;
     const delivery = pendingDelivery;
     setInput(""); setPendingDelivery(null);
@@ -140,13 +168,16 @@ function Interview() {
     setAnswers(next);
     setMsgs((m) => [...m, { from: "me", text: a, delivery }]);
     if (next.length < 3) {
-      setMsgs((m) => [...m, { from: "ai", text: `${t.q} ${next.length + 1} ${t.of} 3: ${questions[next.length]}` }]);
+      const qn = `${t.q} ${next.length + 1} ${t.of} 3: ${questions[next.length]}`;
+      setMsgs((m) => [...m, { from: "ai", text: qn }]);
+      say(qn);
       return;
     }
     setMsgs((m) => [...m, { from: "ai", text: t.eval }]);
+    say(t.eval);
     setBusy(true); setErr(null);
     try {
-      setResult(await call({
+      const ev: Evaluation = await call({
         step: "evaluate", branch, lang,
         qa: questions.map((q, i) => {
           const x = next[i];
@@ -156,7 +187,9 @@ function Interview() {
             delivery: d ? { wpm: d.wpm, fillers: d.fillers, fillerWords: d.fillerWords, longPauses: d.longPauses, longestPause: d.longestPause, startDelay: d.startDelay, confidence: d.confidence, clarity: d.clarity, hesitation: d.hesitation } : null,
           };
         }),
-      }));
+      });
+      setResult(ev);
+      say(`${ev.overall} ${ev.deliverySummary}`);
     } catch (e) { setErr(e instanceof Error ? e.message : "Failed"); }
     setBusy(false);
   };
@@ -244,16 +277,16 @@ function Interview() {
           )}
 
           <form onSubmit={(e) => { e.preventDefault(); void submitAnswer(); }} className="flex gap-2 border-t border-border p-3">
-            <button type="button" onClick={() => { voice.recording && voice.stop(); setBranch(null); }} aria-label="Restart" className="rounded-xl border border-border px-3"><RotateCcw className="h-4 w-4" /></button>
+            <button type="button" onClick={() => { if (voice.recording) voice.stop(); stopSpeaking(); setBranch(null); }} aria-label="Restart" className="rounded-xl border border-border px-3"><RotateCcw className="h-4 w-4" /></button>
             {voice.supported && (
-              <button type="button" onClick={() => void toggleMic()} disabled={busy || finished || !questions.length}
+              <button type="button" onClick={() => void toggleMic()} disabled={busy || finished}
                 aria-label={voice.recording ? "Stop recording" : "Answer by voice"}
                 className={`rounded-xl px-3 disabled:opacity-50 ${voice.recording ? "bg-destructive text-destructive-foreground" : "border border-saffron text-foreground"}`}>
                 {voice.recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               </button>
             )}
-            <input value={input} onChange={(e) => { setInput(e.target.value); }} disabled={busy || finished || !questions.length || voice.recording}
-              placeholder={finished ? "Interview finished" : voice.recording ? "Listening…" : "Speak or type your answer…"} aria-label="Your answer"
+            <input value={input} onChange={(e) => { setInput(e.target.value); }} disabled={busy || finished || voice.recording}
+              placeholder={finished ? "Interview finished" : voice.recording ? "Listening…" : !introDone ? "Introduce yourself: name, college, branch…" : "Speak or type your answer…"} aria-label="Your answer"
               className="min-w-0 flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-saffron disabled:opacity-60" />
             <button type="submit" disabled={busy || (!input.trim() && !voice.recording)} aria-label="Send" className="rounded-xl bg-saffron px-4 text-accent-foreground disabled:opacity-50"><Send className="h-4 w-4" /></button>
           </form>

@@ -1,3 +1,4 @@
+import { speakAsDebasis } from "@/lib/voice";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
@@ -125,30 +126,10 @@ function GpnChat() {
 
     let spoken = false;
 
-    const pickHindiVoice = () => {
-      const voices = window.speechSynthesis.getVoices();
-      return (
-        voices.find((v) => v.lang === "hi-IN") ??
-        voices.find((v) => v.lang?.toLowerCase().startsWith("hi")) ??
-        null
-      );
-    };
-
     const speak = () => {
       if (spoken) return;
       spoken = true;
-      try {
-        const utterance = new SpeechSynthesisUtterance(GPN_GREETING_HI);
-        utterance.lang = "hi-IN";
-        utterance.rate = 0.95;
-        utterance.pitch = 1;
-        const voice = pickHindiVoice();
-        if (voice) utterance.voice = voice;
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
-      } catch {
-        // Speech is a nice-to-have; ignore failures silently.
-      }
+      void speakAsDebasis(GPN_GREETING_HI, "hi");
       cleanup();
     };
 
