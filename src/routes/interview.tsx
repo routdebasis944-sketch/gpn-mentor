@@ -97,7 +97,9 @@ function Interview() {
   const qPromise = useRef<Promise<string[]> | null>(null);
   const say = (text: string) => { void speakAsDebasis(text, lang); };
   useEffect(() => () => stopSpeaking(), []);
-  const voice = useVoiceAnswer(lang === "hi" ? "hi-IN" : "en-IN");
+  const voice = useVoiceAnswer(lang === "hi" ? "hi-IN" : "en-IN", (r) => {
+    setInput(r.text); setPendingDelivery(r.text ? r.delivery : null);
+  });
   const listRef = useRef<HTMLDivElement>(null);
   const t = T[lang];
 
@@ -139,7 +141,7 @@ function Interview() {
 
   const toggleMic = async () => {
     if (voice.recording) {
-      const r = voice.stop();
+      const r = await voice.stop();
       if (r) { setInput(r.text); setPendingDelivery(r.text ? r.delivery : null); }
     } else {
       setPendingDelivery(null);
@@ -149,12 +151,14 @@ function Interview() {
   };
 
   const submitAnswer = async () => {
+    // Send while mic is live: force-stop, capture text + audio metrics, send immediately.
+    let a = input.trim();
+    let delivery = pendingDelivery;
     if (voice.recording) {
-      const r = voice.stop();
-      if (r) { setInput(r.text); setPendingDelivery(r.text ? r.delivery : null); }
-      return; // let the student review the transcript first
+      const r = await voice.stop();
+      a = (r?.text || a).trim();
+      delivery = r && a ? r.delivery : null;
     }
-    const a = input.trim();
     if (!introDone) {
       if (!a || busy) return;
       setInput(""); setPendingDelivery(null);
@@ -162,7 +166,6 @@ function Interview() {
       return;
     }
     if (!a || busy || answers.length >= 3) return;
-    const delivery = pendingDelivery;
     setInput(""); setPendingDelivery(null);
     const next = [...answers, { a, delivery }];
     setAnswers(next);
