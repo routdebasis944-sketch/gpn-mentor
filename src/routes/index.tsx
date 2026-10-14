@@ -1,4 +1,5 @@
 import { speakAsDebasis } from "@/lib/voice";
+import { offlineAnswer } from "@/lib/offline-answer";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
@@ -207,12 +208,12 @@ function GpnChat() {
       });
 
       if (!res.ok || !res.body) {
-        const errText = await res.text().catch(() => "Something went wrong.");
+        await res.text().catch(() => "");
         setMessages((prev) => {
           const next = [...prev];
           const last = next[next.length - 1];
           if (last && last.streaming) {
-            last.content = `⚠️ ${errText || "Could not reach Gpn AI. Please try again."}`;
+            last.content = offlineAnswer(text);
             last.streaming = false;
           }
           return next;
@@ -261,7 +262,7 @@ function GpnChat() {
         const next = [...prev];
         const last = next[next.length - 1];
         if (last && last.streaming) {
-          last.content = accumulated || "_(No response received — please try again.)_";
+          last.content = accumulated || offlineAnswer(text);
           last.streaming = false;
         }
         return next;
@@ -272,7 +273,7 @@ function GpnChat() {
         const next = [...prev];
         const last = next[next.length - 1];
         if (last && last.streaming) {
-          last.content = "⚠️ Network error — please check your connection and try again.";
+          last.content = offlineAnswer(text);
           last.streaming = false;
         }
         return next;
