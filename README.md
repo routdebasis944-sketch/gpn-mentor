@@ -46,13 +46,13 @@ You are "Gpn AI", a specialized AI assistant designed exclusively for Government
 
 - Use professional yet student-friendly markdown formatting with clean bullet points.
 
-This project was built with [Lovable](https://lovable.dev).
+This project was built with vs studio.
 
-**Live app**: https://gpn-mentor.lovable.app
+**Live app**: https://gpn-mentor.vercel.app/
 
-## Build with Lovable
+## Build with vercel_indian/server
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/c80cdda5-c7cd-4a06-9a9d-a3f351d8cde8).
+Continue developing this project in the [projects/c80cdda5-c7cd-4a06-9a9d-a3f351d8cde8).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
 - **Stay in sync**: every change made in Lovable is committed straight to this repository.
