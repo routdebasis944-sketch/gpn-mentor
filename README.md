@@ -48,7 +48,7 @@ You are "Gpn AI", a specialized AI assistant designed exclusively for Government
 
 This project was built with vs studio.
 
-**Live app**: https://gpn-mentor.vercel.app/
+**Live app**: https://gpn-mentor.lovable.app
 
 ## Build with vercel_indian/server
 
